@@ -11,8 +11,12 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
+import org.stealthrobotics.library.Commands;
+import org.stealthrobotics.library.StealthSubsystem;
 
-public class Mecanum extends SubsystemBase {
+import java.util.function.DoubleSupplier;
+
+public class Mecanum extends StealthSubsystem {
     private final DcMotorEx frontLeft;
     private final DcMotorEx frontRight;
     private final DcMotorEx backLeft;
@@ -60,6 +64,30 @@ public class Mecanum extends SubsystemBase {
 
     public void resetHeading() {
         headingOffset = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+    }
+
+    private void drive(double x, double y, double rot) {
+        y = -y;
+
+        double rotX = x * Math.cos(-getHeading()) - y * Math.sin(-getHeading());
+        double rotY = x * Math.sin(-getHeading()) + y * Math.cos(-getHeading());
+
+        rotX = rotX * 1.1;
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rot), 1);
+        double frontLeftPower = (rotY + rotX + rot) / denominator;
+        double backLeftPower = (rotY - rotX + rot) / denominator;
+        double frontRightPower = (rotY - rotX - rot) / denominator;
+        double backRightPower = (rotY + rotX - rot) / denominator;
+
+        frontLeft.setPower(frontLeftPower);
+        backLeft.setPower(backLeftPower);
+        frontRight.setPower(frontRightPower);
+        backRight.setPower(backRightPower);
+    }
+
+    public Command driveTeleop(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
+        return this.run(() -> drive(x.getAsDouble(), y.getAsDouble(), rot.getAsDouble()));
     }
 
 }
