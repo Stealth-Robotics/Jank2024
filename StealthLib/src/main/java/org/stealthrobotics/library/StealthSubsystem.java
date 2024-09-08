@@ -6,10 +6,6 @@ import com.arcrobotics.ftclib.command.StartEndCommand;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 
 public class StealthSubsystem extends SubsystemBase {
-    public StealthSubsystem() {
-        super();
-    }
-    
     public Command runOnce(Runnable action) {
         return Commands.runOnce(action, this);
     }
