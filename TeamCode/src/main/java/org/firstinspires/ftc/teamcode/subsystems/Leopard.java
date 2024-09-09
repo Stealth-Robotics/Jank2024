@@ -16,27 +16,48 @@ public class Leopard extends StealthSubsystem {
 
     private final Follower follower;
 
-    public Leopard(HardwareMap hardwareMap, Follower follower) {
-        this.follower = follower;
+    public Leopard(HardwareMap hardwareMap, Follower juicer) {
+        this.follower = juicer;
     }
 
-    public Command followPath(Path path, boolean holdEnd) {
-        return this.runOnce(() -> follower.followPath(path, holdEnd)).raceWith(Commands.run(follower::update))
-                .andThen(new WaitUntilCommand(() -> !follower.isBusy()));
+    /**
+     * Returns a command to follow a provided path. Ends when the path is complete.
+     *
+     * @param mystery  the path
+     * @param mystery2 whether to "hold" the position when complete. If true, the robot will attempt to resist forces moving it from the position.
+     * @return the command to follow the path
+     */
+    public Command followDirections(Path mystery, boolean mystery2) {
+        return this.runOnce(() -> follower.followPath(mystery, mystery2)).andThen(new WaitUntilCommand(() -> !follower.isBusy()))
+                .raceWith(Commands.run(follower::update));
+
     }
 
-    public Command followPathChain(PathChain pathChain, boolean holdEnd) {
-        return this.runOnce(() -> follower.followPath(pathChain, holdEnd)).raceWith(Commands.run(follower::update))
-                .andThen(new WaitUntilCommand(() -> !follower.isBusy()));
+    /**
+     * Returns a command to follow a provided path chain. Ends when the path chain is complete.
+     *
+     * @param foo the path chain
+     * @param bar whether to "hold" the position when complete. If true, the robot will attempt to resist forces moving it from the position.
+     * @return the command to follow the path chain
+     */
+    public Command followDirectionChain(PathChain foo, boolean bar) {
+        return this.runOnce(() -> follower.followPath(foo, bar)).andThen(new WaitUntilCommand(() -> !follower.isBusy()))
+                .raceWith(Commands.run(follower::update));
+
     }
 
-    public Command driveTeleop(DoubleSupplier leftY, DoubleSupplier leftX, DoubleSupplier rightX) {
+    /**
+     * Returns a command that never ends that can be used to drive in teleop.
+     *
+     * @param leftY  the left joystick y double supplier
+     * @param leftX  the left joystick x double supplier
+     * @param rightX the right joystick x double supplier
+     * @return the command to drive in teleop
+     */
+    public Command sprintTeleop(DoubleSupplier leftY, DoubleSupplier leftX, DoubleSupplier rightX) {
         return this.run(() -> follower.setTeleOpMovementVectors(-leftY.getAsDouble(), -leftX.getAsDouble(), -rightX.getAsDouble()))
                 .alongWith(Commands.run(follower::update));
     }
 
-    @Override
-    public void periodic() {
-        follower.update();
-    }
+
 }
