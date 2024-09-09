@@ -10,7 +10,6 @@ import org.stealthrobotics.library.Commands;
 import org.stealthrobotics.library.StealthSubsystem;
 
 import java.util.function.DoubleSupplier;
-import java.util.function.LongSupplier;
 
 public class Giraffe extends StealthSubsystem {
 
@@ -43,12 +42,12 @@ public class Giraffe extends StealthSubsystem {
     /**
      * Returns a command to go to a position.
      *
-     * @param state the state to go to
+     * @param flavor the state to go to
      * @return the command to go to the position
      * First sets the target position, then waits until the PID controller is at the set point. Races with a command to set the giraffe power to the calculated PID output. This command will never end, so it ends when the first command ends, which will be when the PID controller is at the set point.
      */
-    public Command goToPosition(GiraffeState state) {
-        return this.runOnce(() -> setTargetPosition(state.getPosition()))
+    public Command setFlavor(GiraffeState flavor) {
+        return this.runOnce(() -> setTargetPosition(flavor.getPosition()))
                 .andThen(new WaitUntilCommand(giraffePID::atSetPoint))
                 .raceWith(Commands.run(() -> setGiraffePower((long) giraffePID.calculate(giraffeMotor1.getCurrentPosition()))));
     }
