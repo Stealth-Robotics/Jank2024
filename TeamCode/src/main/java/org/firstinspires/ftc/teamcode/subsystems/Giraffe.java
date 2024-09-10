@@ -39,6 +39,10 @@ public class Giraffe extends StealthSubsystem {
         giraffePID.setSetPoint(position);
     }
 
+    private void holdPosition() {
+        giraffePID.setSetPoint(giraffeMotor1.getCurrentPosition());
+    }
+
     /**
      * Returns a command to go to a position.
      *
@@ -53,7 +57,8 @@ public class Giraffe extends StealthSubsystem {
     }
 
     public Command tameGiraffe(DoubleSupplier power) {
-        return this.run(() -> setGiraffePower((long) power.getAsDouble())).interruptOn(() -> Math.abs((long) power.getAsDouble()) < 0.05);
+        return this.run(() -> setGiraffePower((long) power.getAsDouble())).interruptOn(() -> Math.abs((long) power.getAsDouble()) < 0.05)
+                .whenFinished(this::holdPosition);
 
     }
 
