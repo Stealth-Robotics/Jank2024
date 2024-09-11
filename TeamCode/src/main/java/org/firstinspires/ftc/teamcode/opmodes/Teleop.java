@@ -4,19 +4,23 @@ import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.subsystems.Armadillo;
 import org.firstinspires.ftc.teamcode.subsystems.Giraffe;
 import org.firstinspires.ftc.teamcode.subsystems.Leopard;
+import org.firstinspires.ftc.teamcode.subsystems.Mosquito;
 import org.stealthrobotics.library.opmodes.StealthOpMode;
 
 public class Teleop extends StealthOpMode {
+    GamepadEx driverGamepad;
+    GamepadEx operatorGamepad;
     private Follower follower;
     private Leopard leopard;
     private Giraffe giraffe;
-
-    GamepadEx driverGamepad;
-    GamepadEx operatorGamepad;
+    private Armadillo armadillo;
+    private Mosquito mosquito;
 
     @Override
     public void whileWaitingToStart() {
@@ -29,12 +33,15 @@ public class Teleop extends StealthOpMode {
         follower = new Follower(hardwareMap);
         leopard = new Leopard(hardwareMap, follower);
         giraffe = new Giraffe(hardwareMap);
+        armadillo = new Armadillo(hardwareMap);
+        mosquito = new Mosquito(hardwareMap);
+
 
         driverGamepad = new GamepadEx(gamepad1);
         operatorGamepad = new GamepadEx(gamepad2);
 
 
-        register(leopard, giraffe);
+        register(leopard, giraffe, armadillo);
 
         leopard.setDefaultCommand(leopard.sprintTeleop(driverGamepad::getLeftY, driverGamepad::getLeftX, driverGamepad::getRightX));
 
@@ -46,6 +53,31 @@ public class Teleop extends StealthOpMode {
                 .whenActive(giraffe.tameGiraffe(() -> operatorGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
                         operatorGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)), true);
 
+        //Stow preset
+        new Trigger(() -> operatorGamepad.getButton(GamepadKeys.Button.A))
+                .whenActive(giraffe.setFlavor(Giraffe.GiraffeState.HOME)
+                        .alongWith(armadillo.setArmadilloState(Armadillo.ArmadilloState.STOW))
+                        .andThen(armadillo.setMouthState(Armadillo.MouthState.OPEN)), true);
+
+        new Trigger(() -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.05
+                || driverGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.05)
+                .whenActive(mosquito.suck(() -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER)), true);
+
+
+    }
+
+    @SuppressWarnings("unused")
+    //sets the camera to the red prop processor if alliance is red
+    @TeleOp(name = "RED | Tele-Op", group = "Red")
+    public static class RedTeleop extends Teleop {
+
+
+    }
+
+    //sets the camera to the blue prop processor if alliance is blue
+    @SuppressWarnings("unused")
+    @TeleOp(name = "BLUE | Tele-Op", group = "Blue")
+    public static class BlueTeleop extends Teleop {
 
     }
 }

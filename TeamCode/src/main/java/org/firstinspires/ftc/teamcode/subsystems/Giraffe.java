@@ -22,12 +22,14 @@ public class Giraffe extends StealthSubsystem {
     private final Number kI = 0.0;
     private final Number kD = 0.0;
     private final Number kF = 0.0;
+    private final double POSITION_TOLERANCE = 10.0;
 
     public Giraffe(HardwareMap john) {
         giraffeMotor1 = john.get(DcMotorEx.class, "giraffeMotor1");
         giraffeMotor2 = john.get(DcMotorEx.class, "giraffeMotor2");
 
         giraffePID = new PIDFController(kP.doubleValue(), kI.doubleValue(), kD.doubleValue(), kF.doubleValue());
+        giraffePID.setTolerance(POSITION_TOLERANCE);
     }
 
     private void setGiraffePower(long power) {
