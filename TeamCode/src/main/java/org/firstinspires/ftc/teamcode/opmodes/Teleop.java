@@ -13,6 +13,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Leopard;
 import org.firstinspires.ftc.teamcode.subsystems.Mosquito;
 import org.stealthrobotics.library.opmodes.StealthOpMode;
 
+import java.util.function.DoubleSupplier;
+
 public class Teleop extends StealthOpMode {
     GamepadEx driverGamepad;
     GamepadEx operatorGamepad;
@@ -30,9 +32,11 @@ public class Teleop extends StealthOpMode {
 
     @Override
     public void initialize() {
+        DoubleSupplier giraffeControl = () -> operatorGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
+                operatorGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
         follower = new Follower(hardwareMap);
         leopard = new Leopard(hardwareMap, follower);
-        giraffe = new Giraffe(hardwareMap);
+        giraffe = new Giraffe(hardwareMap, giraffeControl);
         armadillo = new Armadillo(hardwareMap);
         mosquito = new Mosquito(hardwareMap);
 
@@ -48,10 +52,8 @@ public class Teleop extends StealthOpMode {
 
         //Giraffe manual control. when either trigger is pressed, the giraffe will move.
         // because of a condition in the command in the subsystem, the command will be unscheduled once the trigger is released.
-        new Trigger(() -> (operatorGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.05)
-                || (operatorGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.05))
-                .whenActive(giraffe.tameGiraffe(() -> operatorGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
-                        operatorGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)), true);
+        new Trigger(() -> Math.abs(giraffeControl.getAsDouble()) > 0.05)
+                .whenActive(giraffe.tameGiraffe(), true);
 
         //Stow preset
         new Trigger(() -> operatorGamepad.getButton(GamepadKeys.Button.A))
@@ -61,7 +63,8 @@ public class Teleop extends StealthOpMode {
 
         new Trigger(() -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.05
                 || driverGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.05)
-                .whenActive(mosquito.suck(() -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER)), true);
+                .whenActive(mosquito.suck(() -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
+                        driverGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)), true);
 
 
     }

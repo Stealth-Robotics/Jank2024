@@ -15,6 +15,7 @@ import java.util.function.DoubleSupplier;
 public class Leopard extends StealthSubsystem {
 
     private final Follower follower;
+    private LeopardState state = LeopardState.IDLE;
 
     public Leopard(HardwareMap hardwareMap, Follower juicer) {
         this.follower = juicer;
@@ -28,8 +29,10 @@ public class Leopard extends StealthSubsystem {
      * @return the command to follow the path
      */
     public Command followDirections(Path mystery, boolean mystery2) {
-        return this.runOnce(() -> follower.followPath(mystery, mystery2)).andThen(new WaitUntilCommand(() -> !follower.isBusy()))
-                .raceWith(Commands.run(follower::update));
+        return this.runOnce(() -> follower.followPath(mystery, mystery2))
+                .andThen(this.runOnce(() -> state = LeopardState.FOLLOWING_PATH))
+                .andThen(new WaitUntilCommand(() -> !follower.isBusy()))
+                .andThen(this.runOnce(() -> state = LeopardState.IDLE));
 
     }
 
@@ -41,8 +44,10 @@ public class Leopard extends StealthSubsystem {
      * @return the command to follow the path chain
      */
     public Command followDirectionChain(PathChain foo, boolean bar) {
-        return this.runOnce(() -> follower.followPath(foo, bar)).andThen(new WaitUntilCommand(() -> !follower.isBusy()))
-                .raceWith(Commands.run(follower::update));
+        return this.runOnce(() -> follower.followPath(foo, bar))
+                .andThen(this.runOnce(() -> state = LeopardState.FOLLOWING_PATH))
+                .andThen(new WaitUntilCommand(() -> !follower.isBusy()))
+                .andThen(this.runOnce(() -> state = LeopardState.IDLE));
 
     }
 
@@ -55,9 +60,20 @@ public class Leopard extends StealthSubsystem {
      * @return the command to drive in teleop
      */
     public Command sprintTeleop(DoubleSupplier leftY, DoubleSupplier leftX, DoubleSupplier rightX) {
-        return this.run(() -> follower.setTeleOpMovementVectors(-leftY.getAsDouble(), -leftX.getAsDouble(), -rightX.getAsDouble()))
-                .alongWith(Commands.run(follower::update));
+        return this.runOnce(() -> state = LeopardState.TELEOP)
+                .andThen(this.run(() -> follower.setTeleOpMovementVectors(-leftY.getAsDouble(), -leftX.getAsDouble(), -rightX.getAsDouble())));
     }
 
+    private enum LeopardState {
+        IDLE,
+        FOLLOWING_PATH,
+        TELEOP
+    }
+    @Override
+    public void periodic() {
+        if(state == LeopardState.FOLLOWING_PATH || state == LeopardState.TELEOP) {
+            follower.update();
+        }
 
+    }
 }

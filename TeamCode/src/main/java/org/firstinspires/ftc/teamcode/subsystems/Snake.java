@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.arcrobotics.ftclib.command.Command;
+import com.arcrobotics.ftclib.command.WaitUntilCommand;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -18,6 +20,8 @@ public class Snake extends StealthSubsystem {
 
     private final double POSITION_TOLERANCE = 10.0;
 
+    private SnakeState mode = SnakeState.PID;
+
     public Snake(HardwareMap hardwareMap){
         tongue = hardwareMap.get(DcMotorEx.class, "tongue");
         snakePID = new PIDController(kP, kI, kD);
@@ -32,6 +36,40 @@ public class Snake extends StealthSubsystem {
         return snakePID.atSetPoint();
     }
 
+    /**
+     * Returns a command to move the snake to a position. sets PID target, then periodic handles setting power.
+     * ends when at setpoint
+     * @param position the position to move to
+     * @return the command to move the snake
+     */
+    public Command snakeToPosition(SnakePosition position){
+        return this.runOnce(() -> setSetpoint(position.getPosition())).andThen(new WaitUntilCommand(this::atSetpoint));
+    }
 
+    @Override
+    public void periodic() {
+        if(mode == SnakeState.PID){
+            tongue.setPower(snakePID.calculate(tongue.getCurrentPosition()));
+        }
+    }
 
+    private enum SnakeState {
+        PID,
+        MANUAL
+    }
+
+    public enum SnakePosition {
+        INTAKING(0),
+        HOME(1);
+
+        private final int position;
+
+        SnakePosition(int position){
+            this.position = position;
+        }
+
+        public int getPosition(){
+            return position;
+        }
+    }
 }

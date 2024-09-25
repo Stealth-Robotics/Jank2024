@@ -24,12 +24,21 @@ public class Giraffe extends StealthSubsystem {
     private final Number kF = 0.0;
     private final double POSITION_TOLERANCE = 10.0;
 
-    public Giraffe(HardwareMap john) {
+    private GiraffeMode mode = GiraffeMode.PID;
+
+    private final DoubleSupplier manualControl;
+
+    public Giraffe(HardwareMap john, DoubleSupplier manualControl) {
         giraffeMotor1 = john.get(DcMotorEx.class, "giraffeMotor1");
         giraffeMotor2 = john.get(DcMotorEx.class, "giraffeMotor2");
 
         giraffePID = new PIDFController(kP.doubleValue(), kI.doubleValue(), kD.doubleValue(), kF.doubleValue());
         giraffePID.setTolerance(POSITION_TOLERANCE);
+        this.manualControl = manualControl;
+    }
+
+    public Giraffe(HardwareMap john) {
+        this(john, () -> 0.0);
     }
 
     private void setGiraffePower(long power) {
@@ -54,14 +63,33 @@ public class Giraffe extends StealthSubsystem {
      */
     public Command setFlavor(GiraffeState flavor) {
         return this.runOnce(() -> setTargetPosition(flavor.getPosition()))
-                .andThen(new WaitUntilCommand(giraffePID::atSetPoint))
-                .raceWith(Commands.run(() -> setGiraffePower((long) giraffePID.calculate(giraffeMotor1.getCurrentPosition()))));
+                .andThen(new WaitUntilCommand(giraffePID::atSetPoint));
     }
 
-    public Command tameGiraffe(DoubleSupplier power) {
-        return this.run(() -> setGiraffePower((long) power.getAsDouble())).interruptOn(() -> Math.abs((long) power.getAsDouble()) < 0.05)
-                .whenFinished(this::holdPosition);
+    /**
+     * sets the mode to manual to disable PID use, then cancels the command once the trigger or joystick is released.
+     * sets mode back to pid and holds the position.
+     * @return the command to manually control the giraffe
+     *
+     *
+     */
+    public Command tameGiraffe() {
+        return this.runOnce(() -> mode = GiraffeMode.MANUAL).andThen(new WaitUntilCommand(() -> Math.abs((long) manualControl.getAsDouble()) < 0.05))
+                .andThen(this.runOnce(() -> mode = GiraffeMode.PID)).andThen(this.runOnce(this::holdPosition));
+    }
 
+    /**
+     * periodically sets the giraffe power based on the mode.
+     * if in pid mode, calculates the power based on the pid controller. if in manual mode, sets the power based on the manual control.
+     */
+    @Override
+    public void periodic(){
+        if(mode == GiraffeMode.PID){
+            setGiraffePower((long) giraffePID.calculate(giraffeMotor1.getCurrentPosition()));
+        }
+        if(mode == GiraffeMode.MANUAL){
+            setGiraffePower((long) manualControl.getAsDouble());
+        }
     }
 
     public enum GiraffeState {
@@ -83,6 +111,11 @@ public class Giraffe extends StealthSubsystem {
         public int getPosition() {
             return position;
         }
+    }
+
+    private enum GiraffeMode{
+        MANUAL,
+        PID
     }
 
 
