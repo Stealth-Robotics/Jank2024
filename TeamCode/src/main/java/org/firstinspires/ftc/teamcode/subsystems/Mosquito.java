@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.arcrobotics.ftclib.command.Command;
+import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.WaitCommand;
+import com.arcrobotics.ftclib.command.WaitUntilCommand;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -18,14 +20,22 @@ public class Mosquito extends StealthSubsystem {
     private final DcMotorEx straw;
     private final ColorSensor eyes;
 
+    private SuckSide side = SuckSide.FRONT;
+
+
+
     public Mosquito(HardwareMap blood){
         legs = blood.get(Servo.class, "legs");
         straw = blood.get(DcMotorEx.class, "straw");
         eyes = blood.get(ColorSensor.class, "eyes");
     }
 
-    private void setLegState(LegState state) {
-        legs.setPosition(state.getPosition());
+    private Command setLegState(LegState state) {
+        return Commands.runOnce(() -> legs.setPosition(state.getPosition())).andThen(new WaitCommand(250));
+    }
+
+    public SuckSide getSide() {
+        return side;
     }
 
     /**
@@ -37,14 +47,16 @@ public class Mosquito extends StealthSubsystem {
      */
     public Command suck(DoubleSupplier power){
         return this.run(() -> straw.setPower(power.getAsDouble()))
-                .alongWith(Commands.runOnce(() -> setLegState(LegState.SUCKING)))
+                .alongWith(new ConditionalCommand(setLegState(LegState.SUCKING_FRONT),
+                        setLegState(LegState.SUCKING_BACK), () -> side == SuckSide.FRONT))
                 .interruptOn(() -> Math.abs(power.getAsDouble()) < 0.05 || eyes.red() > 100 || eyes.blue() > 100)
-                .andThen(this.runOnce(() -> setLegState(LegState.HOME)))
+                .andThen(setLegState(LegState.HOME))
                 .andThen(this.runOnce(() -> straw.setPower(0.0)));
     }
 
     public enum LegState {
-        SUCKING(0.0),
+        SUCKING_FRONT(0.0),
+        SUCKING_BACK(0.0),
         HOME(1.0);
 
         private final double position;
@@ -56,6 +68,11 @@ public class Mosquito extends StealthSubsystem {
         public double getPosition() {
             return position;
         }
+    }
+
+    public enum SuckSide {
+        FRONT,
+        BACK
     }
 
 
