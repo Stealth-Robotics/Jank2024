@@ -61,7 +61,7 @@ public class Leopard extends StealthSubsystem {
      */
     public Command sprintTeleop(DoubleSupplier leftY, DoubleSupplier leftX, DoubleSupplier rightX) {
         return this.runOnce(() -> state = LeopardState.TELEOP)
-                .andThen(this.run(() -> follower.setTeleOpMovementVectors(-leftY.getAsDouble(), -leftX.getAsDouble(), -rightX.getAsDouble())));
+                .andThen(this.run(() -> follower.setTeleOpMovementVectors(-leftY.getAsDouble(), -leftX.getAsDouble(), -rightX.getAsDouble(), false)));
     }
 
     private enum LeopardState {

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.arcrobotics.ftclib.command.Command;
 import com.arcrobotics.ftclib.command.WaitUntilCommand;
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -20,7 +19,7 @@ public class Snake extends StealthSubsystem {
 
     private final double POSITION_TOLERANCE = 10.0;
 
-    private SnakeState mode = SnakeState.PID;
+    private SnakeMode mode = SnakeMode.PID;
 
     public Snake(HardwareMap hardwareMap){
         tongue = hardwareMap.get(DcMotorEx.class, "tongue");
@@ -48,12 +47,12 @@ public class Snake extends StealthSubsystem {
 
     @Override
     public void periodic() {
-        if(mode == SnakeState.PID){
+        if(mode == SnakeMode.PID){
             tongue.setPower(snakePID.calculate(tongue.getCurrentPosition()));
         }
     }
 
-    private enum SnakeState {
+    private enum SnakeMode {
         PID,
         MANUAL
     }

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.acmerobotics.roadrunner.Pose2d;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.button.Trigger;
@@ -8,9 +9,12 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Armadillo;
 import org.firstinspires.ftc.teamcode.subsystems.Giraffe;
 import org.firstinspires.ftc.teamcode.subsystems.Leopard;
+import org.firstinspires.ftc.teamcode.subsystems.Mecanum;
 import org.firstinspires.ftc.teamcode.subsystems.Mosquito;
 import org.firstinspires.ftc.teamcode.subsystems.Snake;
 import org.stealthrobotics.library.Commands;
@@ -22,11 +26,13 @@ public class Teleop extends StealthOpMode {
     GamepadEx driverGamepad;
     GamepadEx operatorGamepad;
     private Follower follower;
-    private Leopard leopard;
+//    private Leopard leopard;
     private Giraffe giraffe;
     private Armadillo armadillo;
     private Mosquito mosquito;
     private Snake snake;
+    private Mecanum mecanum;
+
     @Override
     public void whileWaitingToStart() {
         CommandScheduler.getInstance().run();
@@ -40,19 +46,22 @@ public class Teleop extends StealthOpMode {
         DoubleSupplier mosquitoControl = () -> driverGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
                 driverGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
         follower = new Follower(hardwareMap);
-        leopard = new Leopard(hardwareMap, follower);
+//        leopard = new Leopard(hardwareMap, follower);
         giraffe = new Giraffe(hardwareMap, giraffeControl);
         armadillo = new Armadillo(hardwareMap);
         mosquito = new Mosquito(hardwareMap);
+        mecanum = new Mecanum(hardwareMap, new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)));
 
 
         driverGamepad = new GamepadEx(gamepad1);
         operatorGamepad = new GamepadEx(gamepad2);
 
 
-        register(leopard, giraffe, armadillo);
+        register(mecanum, giraffe, armadillo);
 
-        leopard.setDefaultCommand(leopard.sprintTeleop(driverGamepad::getLeftY, driverGamepad::getLeftX, driverGamepad::getRightX));
+//        leopard.setDefaultCommand(leopard.sprintTeleop(driverGamepad::getLeftY, driverGamepad::getLeftX, driverGamepad::getRightX));
+
+        mecanum.setDefaultCommand(mecanum.driveTeleop(driverGamepad::getLeftX, driverGamepad::getLeftY, driverGamepad::getRightX));
 
 
         //Giraffe manual control. when either trigger is pressed, the giraffe will move.
@@ -72,6 +81,8 @@ public class Teleop extends StealthOpMode {
         new Trigger(() -> mosquitoControl.getAsDouble() == 0.0)
                 .whenActive(new ConditionalCommand(snake.snakeToPosition(Snake.SnakePosition.INTAKING),
                         Commands.none(), () -> mosquito.getSide() == Mosquito.SuckSide.FRONT), true);
+
+
 
 
     }
