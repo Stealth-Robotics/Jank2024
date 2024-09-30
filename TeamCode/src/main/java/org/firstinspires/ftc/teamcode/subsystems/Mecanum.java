@@ -87,7 +87,7 @@ public class Mecanum extends StealthSubsystem {
     }
 
     public Command driveTeleop(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return this.run(() -> drive(x.getAsDouble(), y.getAsDouble(), rot.getAsDouble()));
+        return this.run(() -> drive(x.getAsDouble(), -y.getAsDouble(), rot.getAsDouble()));
     }
 
 }
