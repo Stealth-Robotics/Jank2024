@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers;
 
+
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -83,7 +84,7 @@ public class OTOSLocalizer extends Localizer {
 
         // TODO: replace these with your tuned multipliers
         otos.setLinearScalar(1.0);
-        otos.setAngularScalar(1.0);
+        otos.setAngularScalar(1.1);
 
         otos.calibrateImu();
         otos.resetTracking();
