@@ -47,8 +47,8 @@ public class Mecanum extends StealthSubsystem {
         //TODO: Must update with correct values
         IMU.Parameters imuParameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
-                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 )
         );
 
@@ -87,7 +87,7 @@ public class Mecanum extends StealthSubsystem {
     }
 
     public Command driveTeleop(DoubleSupplier x, DoubleSupplier y, DoubleSupplier rot) {
-        return this.run(() -> drive(x.getAsDouble(), y.getAsDouble(), rot.getAsDouble()));
+        return this.run(() -> drive(x.getAsDouble(), -y.getAsDouble(), rot.getAsDouble()));
     }
 
 }

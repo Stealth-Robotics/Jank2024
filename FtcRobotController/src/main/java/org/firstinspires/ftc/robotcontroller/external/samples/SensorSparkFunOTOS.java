@@ -25,7 +25,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * See the sensor's product page: https://www.sparkfun.com/products/24904
  */
 @TeleOp(name = "Sensor: SparkFun OTOS", group = "Sensor")
-@Disabled
+
 public class SensorSparkFunOTOS extends LinearOpMode {
     // Create an instance of the sensor
     SparkFunOTOS myOtos;
@@ -117,7 +117,7 @@ public class SensorSparkFunOTOS extends LinearOpMode {
         // inverse of the error. For example, if you move the robot 100 inches and
         // the sensor reports 103 inches, set the linear scalar to 100/103 = 0.971
         myOtos.setLinearScalar(1.0);
-        myOtos.setAngularScalar(1.0);
+        myOtos.setAngularScalar(1.1);
 
         // The IMU on the OTOS includes a gyroscope and accelerometer, which could
         // have an offset. Note that as of firmware version 1.0, the calibration

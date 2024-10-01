@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.localization.localizers;
 
+
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -64,13 +65,12 @@ public class OTOSLocalizer extends Localizer {
     public OTOSLocalizer(HardwareMap map, Pose setStartPose) {
         hardwareMap = map;
 
-        // TODO: replace this with your OTOS port
         /*
          TODO: If you want to use the "SparkFunOTOSCorrected" version of OTOS, then replace the
           'SparkFunOTOS.class' below with 'SparkFunOTOSCorrected.class' and set the OTOS as a
-          "SparkFunOTOS Corrected" in your robot confg
+          "SparkFunOTOS Corrected" in your robot config
          */
-         SparkFunOTOS
+        // TODO: replace this with your OTOS port
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor_otos");
 
         otos.setLinearUnit(DistanceUnit.INCH);
@@ -84,10 +84,12 @@ public class OTOSLocalizer extends Localizer {
 
         // TODO: replace these with your tuned multipliers
         otos.setLinearScalar(1.0);
-        otos.setAngularScalar(1.0);
+        otos.setAngularScalar(1.1);
 
         otos.calibrateImu();
         otos.resetTracking();
+
+
 
         setStartPose(setStartPose);
         totalHeading = 0;
@@ -157,8 +159,9 @@ public class OTOSLocalizer extends Localizer {
      */
     @Override
     public void update() {
-        totalHeading += MathFunctions.getSmallestAngleDifference(otos.getPosition().h, previousHeading);
-        previousHeading = otos.getPosition().h;
+//        totalHeading += MathFunctions.getSmallestAngleDifference(otos.getPosition().h, previousHeading);
+//        previousHeading = otos.getPosition().h;
+        totalHeading = otos.getPosition().h;
     }
 
     /**
