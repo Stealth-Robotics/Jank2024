@@ -89,6 +89,8 @@ public class OTOSLocalizer extends Localizer {
         otos.calibrateImu();
         otos.resetTracking();
 
+
+
         setStartPose(setStartPose);
         totalHeading = 0;
         previousHeading = startPose.getHeading();
@@ -157,8 +159,9 @@ public class OTOSLocalizer extends Localizer {
      */
     @Override
     public void update() {
-        totalHeading += MathFunctions.getSmallestAngleDifference(otos.getPosition().h, previousHeading);
-        previousHeading = otos.getPosition().h;
+//        totalHeading += MathFunctions.getSmallestAngleDifference(otos.getPosition().h, previousHeading);
+//        previousHeading = otos.getPosition().h;
+        totalHeading = otos.getPosition().h;
     }
 
     /**
