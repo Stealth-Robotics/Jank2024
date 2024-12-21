@@ -7,23 +7,24 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
-public class Skibidi extends SubsystemBase {
+public class Tarsier extends SubsystemBase {
     private Limelight3A eyes;
 
-    private SkibidiState state = SkibidiState.APRILTAG;
+    private OliverState state = OliverState.APRILTAG;
 
     private LLResult result;
 
-    public Skibidi(HardwareMap hardwareMap) {
+    public Tarsier(HardwareMap hardwareMap) {
         eyes = hardwareMap.get(Limelight3A.class, "ll");
     }
+    // Oliver be one of these things https://www.istockphoto.com/photo/tarsier-gm457072497-30869922
 
-    public void setState(SkibidiState state) {
+    public void setState(OliverState state) {
         this.state = state;
         eyes.pipelineSwitch(state.getValue());
     }
 
-    public SkibidiState getState() {
+    public OliverState getState() {
         return state;
     }
 
@@ -45,12 +46,12 @@ public class Skibidi extends SubsystemBase {
         return res;
     }
 
-    public enum SkibidiState {
+    public enum OliverState {
         APRILTAG(0),
         BLOCK_DETECTION(1);
 
         private final int value;
-        SkibidiState(int value) {
+        OliverState(int value) {
             this.value = value;
         }
 
@@ -59,3 +60,5 @@ public class Skibidi extends SubsystemBase {
         }
     }
 }
+
+// You'll taste it, you'll taste it in time
