@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.stealthrobotics.library.StealthSubsystem;
 
+import java.util.function.DoubleSupplier;
+
 public class Snake extends StealthSubsystem {
 
     private DcMotorEx tongue;
@@ -20,11 +22,13 @@ public class Snake extends StealthSubsystem {
     private final double POSITION_TOLERANCE = 10.0;
 
     private SnakeMode mode = SnakeMode.PID;
+    private final DoubleSupplier manualControl;
 
-    public Snake(HardwareMap hardwareMap){
+    public Snake(HardwareMap hardwareMap, DoubleSupplier manualControl){
         tongue = hardwareMap.get(DcMotorEx.class, "tongue");
         snakePID = new PIDController(kP, kI, kD);
         snakePID.setTolerance(POSITION_TOLERANCE);
+        this.manualControl = manualControl;
     }
 
     private void setSetpoint(int setpoint) {
@@ -45,10 +49,17 @@ public class Snake extends StealthSubsystem {
         return this.runOnce(() -> setSetpoint(position.getPosition())).andThen(new WaitUntilCommand(this::atSetpoint));
     }
 
+    public Command snakeManual(){
+        return this.runOnce(() -> mode = SnakeMode.MANUAL).andThen(new WaitUntilCommand(() -> Math.abs((long) manualControl.getAsDouble()) < 0.05));
+    }
+
     @Override
     public void periodic() {
         if(mode == SnakeMode.PID){
             tongue.setPower(snakePID.calculate(tongue.getCurrentPosition()));
+        }
+        if(mode == SnakeMode.MANUAL){
+            tongue.setPower(manualControl.getAsDouble());
         }
     }
 

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.Command;
 import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.WaitCommand;
@@ -14,11 +15,16 @@ import org.stealthrobotics.library.StealthSubsystem;
 
 import java.util.function.DoubleSupplier;
 
+@Config
 public class Mosquito extends StealthSubsystem {
 
     private final Servo legs;
     private final DcMotorEx straw;
-    private final ColorSensor eyes;
+//    private final ColorSensor eyes;
+
+
+
+    private LegState state = LegState.HOME;
 
     private SuckSide side = SuckSide.FRONT;
 
@@ -27,10 +33,14 @@ public class Mosquito extends StealthSubsystem {
     public Mosquito(HardwareMap blood){
         legs = blood.get(Servo.class, "legs");
         straw = blood.get(DcMotorEx.class, "straw");
-        eyes = blood.get(ColorSensor.class, "eyes");
+//        eyes = blood.get(ColorSensor.class, "eyes");
     }
 
-    private Command setLegState(LegState state) {
+    public LegState getState() {
+        return state;
+    }
+    public Command setLegState(LegState state) {
+        this.state = state;
         return Commands.runOnce(() -> legs.setPosition(state.getPosition())).andThen(new WaitCommand(250));
     }
 
@@ -49,15 +59,15 @@ public class Mosquito extends StealthSubsystem {
         return this.run(() -> straw.setPower(power.getAsDouble()))
                 .alongWith(new ConditionalCommand(setLegState(LegState.SUCKING_FRONT),
                         setLegState(LegState.SUCKING_BACK), () -> side == SuckSide.FRONT))
-                .interruptOn(() -> Math.abs(power.getAsDouble()) < 0.05 || eyes.red() > 100 || eyes.blue() > 100)
+                .interruptOn(() -> Math.abs(power.getAsDouble()) < 0.05 /* || eyes.red() > 100 || eyes.blue() > 100*/)
                 .andThen(setLegState(LegState.HOME))
                 .andThen(this.runOnce(() -> straw.setPower(0.0)));
     }
 
     public enum LegState {
-        SUCKING_FRONT(0.0),
+        SUCKING_FRONT(0.4),
         SUCKING_BACK(0.0),
-        HOME(1.0);
+        HOME(0.45);
 
         private final double position;
 

@@ -35,7 +35,7 @@ public class Teleop extends StealthOpMode {
     private Snake snake;
     private Mecanum mecanum;
 
-    Limelight3A ll;
+//    Limelight3A ll;
 
     @Override
     public void whileWaitingToStart() {
@@ -45,7 +45,7 @@ public class Teleop extends StealthOpMode {
 
     @Override
     public void initialize() {
-        ll = hardwareMap.get(Limelight3A.class,"limelight");
+//        ll = hardwareMap.get(Limelight3A.class,"limelight");
         
         DoubleSupplier giraffeControl = () -> operatorGamepad.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) -
                 operatorGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
@@ -53,9 +53,10 @@ public class Teleop extends StealthOpMode {
                 driverGamepad.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
 //        follower = new Follower(hardwareMap);
 ////        leopard = new Leopard(hardwareMap, follower);
-//        giraffe = new Giraffe(hardwareMap, giraffeControl);
+        giraffe = new Giraffe(hardwareMap, giraffeControl, telemetry);
 //        armadillo = new Armadillo(hardwareMap);
-//        mosquito = new Mosquito(hardwareMap);
+        mosquito = new Mosquito(hardwareMap);
+        snake = new Snake(hardwareMap, mosquitoControl);
         mecanum = new Mecanum(hardwareMap, new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)));
 
 
@@ -63,20 +64,33 @@ public class Teleop extends StealthOpMode {
         operatorGamepad = new GamepadEx(gamepad2);
 
 
-        register(mecanum);
+        register(mecanum, snake);
 
 //        leopard.setDefaultCommand(leopard.sprintTeleop(driverGamepad::getLeftY, driverGamepad::getLeftX, driverGamepad::getRightX));
 
 //        mecanum.setDefaultCommand(mecanum.driveTeleop(driverGamepad::getLeftX, driverGamepad::getLeftY, driverGamepad::getRightX));
-        mecanum.setDefaultCommand(mecanum.driveTeleop(() -> driverGamepad.getLeftX(), () -> driverGamepad.getLeftY(), () -> driverGamepad.getRightX()));
+        mecanum.setDefaultCommand(mecanum.driveTeleop(() -> driverGamepad.getLeftX(), () -> -driverGamepad.getLeftY(), () -> driverGamepad.getRightX()));
 
         new Trigger(() -> driverGamepad.getButton(GamepadKeys.Button.DPAD_DOWN)).whenActive(new InstantCommand(() -> mecanum.resetHeading()));
+
+        new Trigger(() -> driverGamepad.getButton(GamepadKeys.Button.B)).whenActive(
+                mosquito.setLegState(Mosquito.LegState.HOME)
+        );
+
+        new Trigger(() -> driverGamepad.getButton(GamepadKeys.Button.Y)).whenActive(
+                mosquito.setLegState(Mosquito.LegState.SUCKING_FRONT)
+        );
 
 
         //Giraffe manual control. when either trigger is pressed, the giraffe will move.
         // because of a condition in the command in the subsystem, the command will be unscheduled once the trigger is released.
-//        new Trigger(() -> Math.abs(giraffeControl.getAsDouble()) > 0.05)
-//                .whenActive(giraffe.tameGiraffe(), true);
+        new Trigger(() -> Math.abs(mosquitoControl.getAsDouble()) > 0.05)
+                .whenActive(snake.snakeManual(), true);
+
+        new Trigger(() -> Math.abs(giraffeControl.getAsDouble()) > 0.05)
+                .whenActive(giraffe.tameGiraffe(), true);
+
+        new Trigger(() -> driverGamepad.getButton(GamepadKeys.Button.A)).whenActive(new InstantCommand(() -> giraffe.toggleHold()));
 //
 //        //Stow preset
 //        new Trigger(() -> operatorGamepad.getButton(GamepadKeys.Button.A))

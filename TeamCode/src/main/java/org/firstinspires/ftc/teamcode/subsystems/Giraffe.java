@@ -3,9 +3,11 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.arcrobotics.ftclib.command.Command;
 import com.arcrobotics.ftclib.command.WaitUntilCommand;
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.stealthrobotics.library.Commands;
 import org.stealthrobotics.library.StealthSubsystem;
 
@@ -28,17 +30,24 @@ public class Giraffe extends StealthSubsystem {
 
     private final DoubleSupplier manualControl;
 
-    public Giraffe(HardwareMap john, DoubleSupplier manualControl) {
+    private final Telemetry telemetry;
+
+    public Giraffe(HardwareMap john, DoubleSupplier manualControl, Telemetry telemetry) {
         giraffeMotor1 = john.get(DcMotorEx.class, "giraffeMotor1");
         giraffeMotor2 = john.get(DcMotorEx.class, "giraffeMotor2");
+
+        giraffeMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        giraffeMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         giraffePID = new PIDFController(kP.doubleValue(), kI.doubleValue(), kD.doubleValue(), kF.doubleValue());
         giraffePID.setTolerance(POSITION_TOLERANCE);
         this.manualControl = manualControl;
+        this.telemetry = telemetry;
     }
 
-    public Giraffe(HardwareMap john) {
-        this(john, () -> 0.0);
+    public Giraffe(HardwareMap john, Telemetry telemetry) {
+        this(john, () -> 0.0, telemetry);
     }
 
     private void setGiraffePower(long power) {
@@ -74,8 +83,17 @@ public class Giraffe extends StealthSubsystem {
      *
      */
     public Command tameGiraffe() {
-        return this.runOnce(() -> mode = GiraffeMode.MANUAL).andThen(new WaitUntilCommand(() -> Math.abs((long) manualControl.getAsDouble()) < 0.05))
-                .andThen(this.runOnce(() -> mode = GiraffeMode.PID)).andThen(this.runOnce(this::holdPosition));
+        return this.runOnce(() -> mode = GiraffeMode.MANUAL).andThen(new WaitUntilCommand(() -> Math.abs((long) manualControl.getAsDouble()) < 0.05));
+//                .andThen(this.runOnce(() -> mode = GiraffeMode.PID)).andThen(this.runOnce(this::holdPosition));
+    }
+
+    public void toggleHold(){
+        if(mode != GiraffeMode.HOLDING){
+            mode = GiraffeMode.HOLDING;
+        }
+        else{
+            mode = GiraffeMode.PID;
+        }
     }
 
     /**
@@ -90,6 +108,10 @@ public class Giraffe extends StealthSubsystem {
         if(mode == GiraffeMode.MANUAL){
             setGiraffePower((long) manualControl.getAsDouble());
         }
+        if(mode == GiraffeMode.HOLDING){
+            setGiraffePower(1);
+        }
+        telemetry.addData("Mode", mode.name());
     }
 
     public enum GiraffeState {
@@ -115,7 +137,8 @@ public class Giraffe extends StealthSubsystem {
 
     private enum GiraffeMode{
         MANUAL,
-        PID
+        PID,
+        HOLDING
     }
 
 
